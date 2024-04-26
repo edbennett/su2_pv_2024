@@ -1,0 +1,17 @@
+scratch
+.DS_Store
+.#*
+*#*#
+*~
+*__pycache__
+
+cache/
+tmp/
+
+raw_data/
+
+!*/.git_keep
+
+**.pyc
+*.pdf
+**.ipynb_checkpoints
