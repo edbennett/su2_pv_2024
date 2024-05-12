@@ -188,6 +188,17 @@ def plot_phasediagram_threepanel(plaquettes, title=None, file_suffix=""):
             )
         ax.set_xlabel("$m_0$")
 
+    for beta in betas:
+        subset = filter(plaquettes, 0, None, beta).sort(by="mass")
+        visible_subset = subset.filter(pl.col("mass") < 0)
+        for ax in axes:
+            ax.axhline(
+                visible_subset["plaquette_value"][-1],
+                color=colormap(normalise(beta)),
+                dashes=(4, 4),
+                lw=0.5,
+            )
+
     if title:
         fig.suptitle(title)
     axes[0].set_ylabel(r"$\langle P \rangle$")
