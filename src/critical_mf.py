@@ -58,11 +58,15 @@ def get_description(result, args, metadata):
 
 
 def write_result(fit_result, args, metadata):
+    mPCAC_threshold = 5e-4
+    target_mf = inverse_fit_form(fit_result.fit_parameters, mPCAC_threshold)
+    target_mf.gamma_method()
+
     if not args.output_filename:
-        print(fit_result.fit_parameters[0])
+        print(target_mf)
         return
 
-    fit_result.fit_parameters[0].dump(
+    target_mf.dump(
         args.output_filename,
         description=get_description(fit_result, args, metadata)
     )
