@@ -12,9 +12,9 @@ import pyerrors as pe
 
 memory = Memory("cache")
 
-betas = [0.5, 0.8, 1.0, 1.2, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3.2, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0]
+betas = [1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8]
 masses = [-2.9, -2.8, -2.7, -2.7, -2.5, -2.4, -2.3, -2.2, -2.1, -2.0, -1.9, -1.8, -1.7, -1.6, -1.5, -1.4, -1.3, -1.2, -1.1, -1.0, -0.95, -0.9, -0.85, -0.8, -0.75, -0.7, -0.65, -0.6, -0.55, -0.5, -0.45, -0.4, -0.35, -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-pv_specs = [(0, None), (1, 10), (1, 1), (1, 0.5), (1, 0.2), (1, 0.0), (1, -1), (2, 0.5), (2, 1.0), (3, 0.5), (3, 1.0), (5, 0.5), (5, 1.0), (10, 0.5), (10, 1.0), (15, 0.5), (15, 1.0)]
+pv_specs = [(0, None), (5, 0.5), (5, 1.0), (10, 0.5), (10, 1.0), (15, 0.5), (15, 1.0)]
 
 
 @memory.cache
@@ -120,14 +120,12 @@ def get_title(npv, mpv):
 
 
 def plot_phasediagram():
-    for subdir, title, file_suffix in [
-        ("phasediagram", r"$m_0+\delta m=m_{\mathrm{PV}}$", "v1"),
-        ("phasediagram_alt", r"$\delta m=m_{\mathrm{PV}}$", "v2"),
-        ("phasediagram_additive", r"HMC + $m=10,m+\delta m=m_{\mathrm{PV}}$", "v3"),
-    ]:
-        plaquettes = get_plaquettes(subdir=subdir)
-        plot_phasediagram_threepanel(plaquettes, title=title, file_suffix=file_suffix)
-        plot_phasediagram_combined(plaquettes, title=title, file_suffix=file_suffix)
+    subdir = "phasediagram"
+    title = r"HMC + $m=10,m+\delta m=m_{\mathrm{PV}}$"
+
+    plaquettes = get_plaquettes(subdir=subdir)
+    plot_phasediagram_threepanel(plaquettes, title=title)
+    plot_phasediagram_combined(plaquettes, title=title)
 
 
 def filter(plaquettes, npv, mpv, beta):
