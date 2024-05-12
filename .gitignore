@@ -8,6 +8,9 @@ scratch
 cache/
 tmp/
 
+.snakemake/
+intermediary_data/
+metadata/
 raw_data/
 
 !*/.git_keep
