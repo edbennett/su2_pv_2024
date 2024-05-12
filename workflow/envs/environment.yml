@@ -31,7 +31,6 @@ dependencies:
       - llvmlite==0.42.0
       - lxml==5.2.1
       - matplotlib==3.8.4
-      - meson-analysis==0.0.1
       - numba==0.59.1
       - numdifftools==0.9.41
       - numpy==1.26.4
@@ -47,4 +46,5 @@ dependencies:
       - scipy==1.13.0
       - six==1.16.0
       - tzdata==2024.1
+      - ../../libs/meson_analysis
 prefix: /opt/homebrew/Caskroom/miniconda/base/envs/su2_pv

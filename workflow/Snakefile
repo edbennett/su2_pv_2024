@@ -1,0 +1,66 @@
+import pandas as pd
+
+critical_mass_ensembles = pd.read_csv("metadata/critical_mass_tuning.csv")
+
+# TODO adjust once full runs are done
+targets = critical_mass_ensembles.drop(columns=["measure_spectrum", "m", "nsteps"]).drop_duplicates()
+
+
+rule all:
+    input:
+        "intermediary_data/critical_mass/target_mass.csv",
+
+
+mpcac_datafile = "intermediary_data/critical_mass/{Npv}pv/beta{beta}/m{m}/mpv{mpv}/mpcac_{Npv}pv_beta{beta}_m{m}_mpv{mpv}_{nsteps}steps.json.gz"
+rule fit_mpcac:
+    input:
+        datafile="raw_data/critical_mass/{Npv}pv/beta{beta}/m{m}/mpv{mpv}/out_corr_{Npv}pv_beta{beta}_m{m}_mpv{mpv}_{nsteps}steps_0",
+        script="src/mpcac.py",
+    output:
+        datafile=mpcac_datafile,
+        plotfile="intermediary_data/critical_mass/{Npv}pv/beta{beta}/m{m}/mpv{mpv}/effmass_{Npv}pv_beta{beta}_m{m}_mpv{mpv}_{nsteps}steps.pdf",
+    conda:
+        "envs/environment.yml"
+    shell:
+        "python {input.script} {input.datafile} --output_filename {output.datafile} --plot_filename {output.plotfile} --Npv {wildcards.Npv} --mpv {wildcards.mpv}"
+
+
+def mass_inputs(wildcards):
+    ensembles = critical_mass_ensembles[
+        (critical_mass_ensembles.Npv == int(wildcards["Npv"]))
+        & (critical_mass_ensembles.beta == float(wildcards["beta"]))
+        & (critical_mass_ensembles.mpv == float(wildcards["mpv"]))
+        & (critical_mass_ensembles.measure_spectrum)
+    ]
+    return [mpcac_datafile.format(**ensemble) for ensemble in ensembles.to_dict("records")]
+
+
+critical_mass_datafile = "intermediary_data/critical_mass/{Npv}pv/beta{beta}/mpv{mpv}/critical_mf.json.gz"
+rule critical_mass:
+    input:
+        datafiles=mass_inputs,
+        script="src/critical_mf.py",
+    output:
+        datafile=critical_mass_datafile,
+        plotfile="intermediary_data/critical_mass/{Npv}pv/beta{beta}/mpv{mpv}/mf_extrapolation.pdf",
+    conda:
+        "envs/environment.yml"
+    shell:
+        "python {input.script} {input.datafiles} --output_filename {output.datafile} --plot_filename {output.plotfile}"
+
+
+critical_mass_files = [
+    critical_mass_datafile.format(**target) for target in targets.to_dict("records")
+]
+
+
+rule collate_critical_masses:
+    input:
+        datafiles=critical_mass_files,
+        script="src/collate_critical_mf.py",
+    output:
+        csv="intermediary_data/critical_mass/target_mass.csv",
+    conda:
+        "envs/environment.yml"
+    shell:
+        "python {input.script} {input.datafiles} --output_file {output.csv}"
