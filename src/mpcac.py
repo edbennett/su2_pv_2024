@@ -26,6 +26,12 @@ def weighted_mean(results):
     return result
 
 
+def add_band(ax, result):
+    ax.axhline(result.value)
+    ax.axhline(result.value + result.dvalue, dashes=(2, 2))
+    ax.axhline(result.value + result.dvalue, dashes=(2, 2))
+
+
 def plot_results(correlator, results, output_filename=None):
     plt.style.use("styles/paperdraft.mplstyle")
 
@@ -42,9 +48,7 @@ def plot_results(correlator, results, output_filename=None):
     ax2 = fig.add_subplot(gs[1, 1], sharex=ax1)
 
     ax0.errorbar(t, meff_value, yerr=meff_err, ls="none", capsize=1)
-    ax0.axhline(result.value)
-    ax0.axhline(result.value + result.dvalue, dashes=(2, 2))
-    ax0.axhline(result.value + result.dvalue, dashes=(2, 2))
+    add_band(ax0, result)
     ax0.set_xlabel(r"$t$")
     ax0.set_ylabel(r"$m_{\mathrm{eff}}$")
 
@@ -56,6 +60,7 @@ def plot_results(correlator, results, output_filename=None):
         ls="none",
         capsize=1,
     )
+    add_band(ax1, result)
     ax1.tick_params("x", labelbottom=False)
 
     ax2.set_xlabel("Index")
