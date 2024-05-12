@@ -17,7 +17,7 @@ def get_args():
 def get_consistent_metadata(data):
     original_metadata = [datum["description"] for datum in data]
     metadata = {}
-    for key in "group_family", "Nc", "beta", "valence_representation", "dynamical_representation":
+    for key in "group_family", "Nc", "beta", "valence_representation", "dynamical_representation", "Npv", "mpv":
         values = [metadatum[key] for metadatum in original_metadata]
         if (num_distinct := len(set(values))) != 1:
             message = f"Multiple ({num_distinct}) values found for {key}"
@@ -33,17 +33,22 @@ def fit_form(params, m):
     return B * (m - m0) ** C
 
 
+def inverse_fit_form(params, mPCAC):
+    m0, B, C = params
+    return m0 + (mPCAC / B) ** (1 / C)
+
+
 def fit(data):
     x_data = [datum["description"]["valence_masses"][0] for datum in data]
     y_data = [datum["obsdata"][0] for datum in data]
     for datum in y_data:
         datum.gamma_method()
-    return pe.fits.least_squares(x_data, y_data, fit_form, initial_guess=[-2.0, 1.0, 1.0])
+    return pe.fits.least_squares(x_data, y_data, fit_form, initial_guess=[-2.0, 1.0, 1.0], silent=True)
 
 
 def get_description(result, args, metadata):
     return {
-        "description": "Critical bare fermion mass for set of ensembles decsribed below.",
+        "description": "Critical bare fermion mass for set of ensembles described below.",
         "input_filenames": args.pcac_mass_filenames,
         "chisquare": result.chisquare,
         "dof": result.dof,
@@ -97,11 +102,10 @@ def plot_result(data, fit_result, output_filename):
 def main():
     args = get_args()
     data = [
-        pe.input.json.load_json(filename, full_output=True)
+        pe.input.json.load_json(filename, full_output=True, verbose=False)
         for filename in args.pcac_mass_filenames
     ]
-    #metadata = get_consistent_metadata(data)
-    metadata = data[0]["description"]
+    metadata = get_consistent_metadata(data)
     fit_result = fit(data)
     fit_result.fit_parameters[0].gamma_method()
     write_result(fit_result, args, metadata)

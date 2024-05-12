@@ -90,6 +90,8 @@ def get_args():
     parser.add_argument("correlator_filename")
     parser.add_argument("--output_filename", default=None)
     parser.add_argument("--plot_filename", default=None)
+    parser.add_argument("--Npv", type=int, default=None)
+    parser.add_argument("--mpv", type=float, default=None)
     return parser.parse_args()
 
 
@@ -108,6 +110,8 @@ def main():
     if (num_masses := len(correlator.metadata["valence_masses"])) != 1:
         message = f"This code expects 1 valence mass; {num_masses} found"
         raise ValueError(message)
+    correlator.metadata["Npv"] = args.Npv
+    correlator.metadata["mpv"] = args.mpv
 
     results = get_pcacs_aic(correlator)
     mpcac_result = weighted_mean(results)
