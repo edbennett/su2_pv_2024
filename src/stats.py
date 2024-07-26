@@ -15,8 +15,8 @@ def weighted_mean(results):
 
 
 def weighted_mean_by_uncertainty(results):
-    numerator = sum([result / result.dvalue ** 2 for result in results])
-    denominator = sum([1 / result.dvalue ** 2 for result in results])
+    numerator = sum([result / result.dvalue**2 for result in results])
+    denominator = sum([1 / result.dvalue**2 for result in results])
     mean = numerator / denominator
     mean.gamma_method()
     return mean

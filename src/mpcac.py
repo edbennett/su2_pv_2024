@@ -21,7 +21,9 @@ def pcac_aic(correlator, range):
 def weighted_mean(results):
     values = [result.fit_parameters[0] for result, aic in results]
     weights = [np.exp(-aic) for result, aic in results]
-    result = sum([value * weight for value, weight in zip(values, weights)]) / sum(weights)
+    result = sum([value * weight for value, weight in zip(values, weights)]) / sum(
+        weights
+    )
     result.gamma_method()
     return result
 
@@ -91,6 +93,7 @@ def get_pcacs_aic(correlator):
 
 def get_args():
     from argparse import ArgumentParser
+
     parser = ArgumentParser()
     parser.add_argument("correlator_filename")
     parser.add_argument("--output_filename", default=None)
@@ -122,10 +125,7 @@ def main():
     mpcac_result = weighted_mean(results)
 
     if args.output_filename:
-        mpcac_result.dump(
-            args.output_filename,
-            description=get_description(correlator)
-        )
+        mpcac_result.dump(args.output_filename, description=get_description(correlator))
     else:
         print("mPCAC =", mpcac_result)
 

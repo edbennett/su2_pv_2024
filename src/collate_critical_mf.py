@@ -14,7 +14,8 @@ def get_data(filenames):
                 "Npv": datum["description"]["Npv"],
                 "mpv": datum["description"]["mpv"],
                 "beta": datum["description"]["beta"],
-                "chisquare_per_dof": datum["description"]["chisquare"] / datum["description"]["dof"],
+                "chisquare_per_dof": datum["description"]["chisquare"]
+                / datum["description"]["dof"],
                 "value_critical_mass": datum["obsdata"][0].value,
                 "error_critical_mass": datum["obsdata"][0].dvalue,
             }
@@ -24,8 +25,11 @@ def get_data(filenames):
 
 def get_args():
     from argparse import ArgumentParser
+
     parser = ArgumentParser()
-    parser.add_argument("critical_mf_filenames", metavar="CRITICAL_MF_FILENAME", nargs="+")
+    parser.add_argument(
+        "critical_mf_filenames", metavar="CRITICAL_MF_FILENAME", nargs="+"
+    )
     parser.add_argument("--output_filename", default="/dev/stdout")
     return parser.parse_args()
 

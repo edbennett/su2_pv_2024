@@ -6,15 +6,16 @@ import numpy as np
 # from https://arxiv.org/pdf/hep-ph/9701390
 quadratic_casimirs = {
     "adj": lambda Nc: Nc,
-    "fun": lambda Nc: (Nc ** 2 - 1) / (2 * Nc),
+    "fun": lambda Nc: (Nc**2 - 1) / (2 * Nc),
 }
 
 # From https://arxiv.org/pdf/1912.13302
 trace_normalisations = {
-    #"adj": lambda Nc: (Nc ** 2 - 4) / Nc,
+    # "adj": lambda Nc: (Nc ** 2 - 4) / Nc,
     "adj": lambda Nc: Nc,
     "fun": lambda Nc: 1 / 2,
 }
+
 
 def perturbative_beta(x, n, rep="adj", Nf=12, Nc=3):
     # Eq. (8) of https://arxiv.org/pdf/hep-ph/9701390
@@ -26,8 +27,13 @@ def perturbative_beta(x, n, rep="adj", Nf=12, Nc=3):
     beta = np.asarray(
         [
             11 / 3 * CA - 4 / 3 * TR * Nf,
-            34 / 3 * CA ** 2 - 4 * CR * TR * Nf - 20 / 3 * CA * TR * Nf,
-            2857 / 54 * CA ** 3 + 2 * CR ** 2 * TR * Nf - 205 / 9 * CR * CA * TR * Nf - 1415 / 27 * CA ** 2 * TR * Nf + 44 / 9 * CR * TR ** 2 * Nf ** 2 + 158 / 27 * CA * TR ** 2 * Nf ** 2,
+            34 / 3 * CA**2 - 4 * CR * TR * Nf - 20 / 3 * CA * TR * Nf,
+            2857 / 54 * CA**3
+            + 2 * CR**2 * TR * Nf
+            - 205 / 9 * CR * CA * TR * Nf
+            - 1415 / 27 * CA**2 * TR * Nf
+            + 44 / 9 * CR * TR**2 * Nf**2
+            + 158 / 27 * CA * TR**2 * Nf**2,
         ]
     )
     return -((4 * np.pi) ** 2) * np.sum(

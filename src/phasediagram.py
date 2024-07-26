@@ -16,7 +16,55 @@ from plots import save_or_show
 memory = Memory("cache")
 
 betas = [1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8]
-masses = [-2.9, -2.8, -2.7, -2.7, -2.5, -2.4, -2.3, -2.2, -2.1, -2.0, -1.9, -1.8, -1.7, -1.6, -1.5, -1.4, -1.3, -1.2, -1.1, -1.0, -0.95, -0.9, -0.85, -0.8, -0.75, -0.7, -0.65, -0.6, -0.55, -0.5, -0.45, -0.4, -0.35, -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+masses = [
+    -2.9,
+    -2.8,
+    -2.7,
+    -2.7,
+    -2.5,
+    -2.4,
+    -2.3,
+    -2.2,
+    -2.1,
+    -2.0,
+    -1.9,
+    -1.8,
+    -1.7,
+    -1.6,
+    -1.5,
+    -1.4,
+    -1.3,
+    -1.2,
+    -1.1,
+    -1.0,
+    -0.95,
+    -0.9,
+    -0.85,
+    -0.8,
+    -0.75,
+    -0.7,
+    -0.65,
+    -0.6,
+    -0.55,
+    -0.5,
+    -0.45,
+    -0.4,
+    -0.35,
+    -0.3,
+    -0.2,
+    -0.1,
+    0.0,
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9,
+    1.0,
+]
 pv_specs = [(0, None), (5, 0.5), (5, 1.0), (10, 0.5), (10, 1.0), (15, 0.5), (15, 1.0)]
 
 
@@ -55,7 +103,9 @@ def read_single_file(filename, therm=100):
                 trajectory = int(line.split()[1].strip("#:."))
             elif line.startswith("[MAIN][0]Plaquette:"):
                 if trajectories and trajectory < trajectories[-1]:
-                    logging.warning(f"File {filename} goes backwards; skipping line {line_number} onwards")
+                    logging.warning(
+                        f"File {filename} goes backwards; skipping line {line_number} onwards"
+                    )
                     break
                 trajectories.append(trajectory)
                 plaquettes.append(float(line.split()[1]))
@@ -94,29 +144,38 @@ def get_plaquette(npv, mpv, beta, mass, dirname="."):
     if not data:
         return
 
-    data.sort(key=lambda d: d["plaquette"].N / list(d["plaquette"].e_tauint.values())[0])
+    data.sort(
+        key=lambda d: d["plaquette"].N / list(d["plaquette"].e_tauint.values())[0]
+    )
     return data[0]["plaquette"]
 
 
 def get_plaquettes(dirname="."):
-    results = pl.DataFrame([
-        {
-            "npv": npv,
-            "mpv": float(mpv if mpv is not None else np.nan),
-            "beta": beta,
-            "mass": mass,
-            "plaquette_value": (plaquette := get_plaquette(npv, mpv, beta, mass, dirname=dirname)) or np.nan,
-            "plaquette_error": plaquette.dvalue if plaquette else np.nan,
-        }
-        for (npv, mpv), beta, mass in product(pv_specs, betas, masses)
-    ])
+    results = pl.DataFrame(
+        [
+            {
+                "npv": npv,
+                "mpv": float(mpv if mpv is not None else np.nan),
+                "beta": beta,
+                "mass": mass,
+                "plaquette_value": (
+                    plaquette := get_plaquette(npv, mpv, beta, mass, dirname=dirname)
+                )
+                or np.nan,
+                "plaquette_error": plaquette.dvalue if plaquette else np.nan,
+            }
+            for (npv, mpv), beta, mass in product(pv_specs, betas, masses)
+        ]
+    )
     return results.with_columns(
-        pl.col(pl.Float32,pl.Float64).fill_nan(None)
+        pl.col(pl.Float32, pl.Float64).fill_nan(None)
     ).drop_nulls(subset=["plaquette_value", "plaquette_error"])
 
 
 def normalise(beta):
-    return (np.log(beta) - np.log(min(betas))) / (np.log(max(betas)) - np.log(min(betas)))
+    return (np.log(beta) - np.log(min(betas))) / (
+        np.log(max(betas)) - np.log(min(betas))
+    )
 
 
 def cycle(iterable):
@@ -136,7 +195,11 @@ def filter(plaquettes, npv, mpv, beta):
     if mpv is None:
         return plaquettes.filter(pl.col("npv") == npv).filter(pl.col("beta") == beta)
     else:
-        return plaquettes.filter(pl.col("npv") == npv).filter(pl.col("mpv") == mpv).filter(pl.col("beta") == beta)
+        return (
+            plaquettes.filter(pl.col("npv") == npv)
+            .filter(pl.col("mpv") == mpv)
+            .filter(pl.col("beta") == beta)
+        )
 
 
 def plot_phasediagram_combined(plaquettes, title=None, file_suffix=""):
@@ -174,8 +237,15 @@ def plot_phasediagram_combined(plaquettes, title=None, file_suffix=""):
 
 def plot_phasediagram_threepanel(plaquettes, title=None, file_suffix=""):
     colormap = mpl.colormaps["plasma"]
-    plot_set = [spec for spec in pv_specs if spec in set(plaquettes[["npv", "mpv"]].rows())]
-    fig, axes = plt.subplots(ncols=len(plot_set), sharey=True, figsize=(1 + 2 * len(plot_set), 4), layout="constrained")
+    plot_set = [
+        spec for spec in pv_specs if spec in set(plaquettes[["npv", "mpv"]].rows())
+    ]
+    fig, axes = plt.subplots(
+        ncols=len(plot_set),
+        sharey=True,
+        figsize=(1 + 2 * len(plot_set), 4),
+        layout="constrained",
+    )
     for (npv, mpv), ax in zip(plot_set, axes):
         ax.set_title(get_title(npv, mpv))
 
@@ -206,7 +276,9 @@ def plot_phasediagram_threepanel(plaquettes, title=None, file_suffix=""):
     if title:
         fig.suptitle(title)
     axes[0].set_ylabel(r"$\langle P \rangle$")
-    axes[-1].legend(loc="upper left", title=r"$\beta$", ncol=2, bbox_to_anchor=(1.1, 1.0))
+    axes[-1].legend(
+        loc="upper left", title=r"$\beta$", ncol=2, bbox_to_anchor=(1.1, 1.0)
+    )
 
     return fig
 

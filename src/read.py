@@ -47,7 +47,9 @@ def normalize_coupling(corr, times, Nc, L):
 
 
 def get_metadata_from_filename(filename):
-    Npv_s, beta_s, mpv_s, L_s = re.match(".*/out_wflow_([0-9]+)pv_beta([0-9.]+)_mpv([0-9.]+)_L([0-9]+)", filename).groups()
+    Npv_s, beta_s, mpv_s, L_s = re.match(
+        ".*/out_wflow_([0-9]+)pv_beta([0-9.]+)_mpv([0-9.]+)_L([0-9]+)", filename
+    ).groups()
     Npv, beta, mpv, L = int(Npv_s), float(beta_s), float(mpv_s), int(L_s)
 
     return {"NT": L, "NX": L, "NY": L, "NZ": L, "Npv": Npv, "mpv": mpv, "beta": beta}

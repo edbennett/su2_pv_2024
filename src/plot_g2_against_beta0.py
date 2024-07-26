@@ -3,8 +3,6 @@
 import argparse
 
 import matplotlib.pyplot as plt
-import numpy as np
-import pyerrors as pe
 
 from plaquette import read_plaquette_from_flows
 from plots import PlotPropRegistry, errorbar_pyerrors, save_or_show
@@ -22,7 +20,9 @@ def get_args():
 
 
 def plot(fit_results):
-    fig, axes = plt.subplots(nrows=2, layout="constrained", figsize=(3.5, 5), sharex=True)
+    fig, axes = plt.subplots(
+        nrows=2, layout="constrained", figsize=(3.5, 5), sharex=True
+    )
     grouped_results = group_params(fit_results, ["Npv", "mpv"])
     colours = PlotPropRegistry.colours()
     markers = PlotPropRegistry("o^s")
@@ -45,8 +45,24 @@ def plot(fit_results):
             )
             for datum in sorted(param_results, key=lambda datum: datum["beta"])
         ]
-        errorbar_pyerrors(axes[0], beta, g_squared, color=colours[(Npv, mpv)], dashes=(1, 4), marker=markers[(Npv, mpv)], label=f"{Npv}PV, $m_{{\\mathrm{{PV}}}} = {mpv}$")
-        errorbar_pyerrors(axes[1], beta, plaquette, color=colours[(Npv, mpv)], dashes=(1, 4), marker=markers[(Npv, mpv)], label=f"{Npv}PV, $m_{{\\mathrm{{PV}}}} = {mpv}$")
+        errorbar_pyerrors(
+            axes[0],
+            beta,
+            g_squared,
+            color=colours[(Npv, mpv)],
+            dashes=(1, 4),
+            marker=markers[(Npv, mpv)],
+            label=f"{Npv}PV, $m_{{\\mathrm{{PV}}}} = {mpv}$",
+        )
+        errorbar_pyerrors(
+            axes[1],
+            beta,
+            plaquette,
+            color=colours[(Npv, mpv)],
+            dashes=(1, 4),
+            marker=markers[(Npv, mpv)],
+            label=f"{Npv}PV, $m_{{\\mathrm{{PV}}}} = {mpv}$",
+        )
 
     axes[0].legend(loc="best")
     return fig

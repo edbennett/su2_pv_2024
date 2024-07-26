@@ -7,6 +7,7 @@ import pyerrors as pe
 
 def get_args():
     from argparse import ArgumentParser
+
     parser = ArgumentParser()
     parser.add_argument("pcac_mass_filenames", metavar="PCAC_MASS_FILENAME", nargs="+")
     parser.add_argument("--output_filename", default=None)
@@ -17,7 +18,15 @@ def get_args():
 def get_consistent_metadata(data):
     original_metadata = [datum["description"] for datum in data]
     metadata = {}
-    for key in "group_family", "Nc", "beta", "valence_representation", "dynamical_representation", "Npv", "mpv":
+    for key in (
+        "group_family",
+        "Nc",
+        "beta",
+        "valence_representation",
+        "dynamical_representation",
+        "Npv",
+        "mpv",
+    ):
         values = [metadatum[key] for metadatum in original_metadata]
         if (num_distinct := len(set(values))) != 1:
             message = f"Multiple ({num_distinct}) values found for {key}"
@@ -43,7 +52,9 @@ def fit(data):
     y_data = [datum["obsdata"][0] for datum in data]
     for datum in y_data:
         datum.gamma_method()
-    return pe.fits.least_squares(x_data, y_data, fit_form, initial_guess=[-2.0, 1.0, 1.0], silent=True)
+    return pe.fits.least_squares(
+        x_data, y_data, fit_form, initial_guess=[-2.0, 1.0, 1.0], silent=True
+    )
 
 
 def get_description(result, args, metadata):
@@ -63,8 +74,7 @@ def write_result(fit_result, args, metadata):
         return
 
     fit_result.fit_parameters[0].dump(
-        args.output_filename,
-        description=get_description(fit_result, args, metadata)
+        args.output_filename, description=get_description(fit_result, args, metadata)
     )
 
 

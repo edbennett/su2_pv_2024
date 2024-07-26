@@ -33,7 +33,9 @@ def output_fits(fit_results, filename):
 def plot_fit(x_values, fit_result, ax, order=4, colour=None):
     scan_x = np.linspace(min(x_values), max(x_values), 1000)
     scan_y = interpolating_form(np.asarray(fit_result, dtype=float), scan_x, n=order)
-    scan_errors = pe.fits.error_band(scan_x, functools.partial(interpolating_form, n=order), fit_result)
+    scan_errors = pe.fits.error_band(
+        scan_x, functools.partial(interpolating_form, n=order), fit_result
+    )
     ax.fill_between(
         scan_x, scan_y + scan_errors, scan_y - scan_errors, color=colour, alpha=0.2
     )
@@ -46,7 +48,15 @@ def plot(fit_results):
     num_columns = len(Npvs)
     num_rows = len(operators)
 
-    fig, axes = plt.subplots(layout="constrained", figsize=(1.5 + 2 * num_columns, 1 + 1.5 * num_rows), ncols=num_columns, nrows=num_rows, squeeze=False, sharex=True, sharey=True)
+    fig, axes = plt.subplots(
+        layout="constrained",
+        figsize=(1.5 + 2 * num_columns, 1 + 1.5 * num_rows),
+        ncols=num_columns,
+        nrows=num_rows,
+        squeeze=False,
+        sharex=True,
+        sharey=True,
+    )
     colours = PlotPropRegistry.colours()
 
     for ax in axes[-1]:
@@ -88,7 +98,14 @@ def plot(fit_results):
         for op_idx, operator in enumerate(operators):
             for Npv_idx, Npv in enumerate(Npvs):
                 ax = axes[op_idx][Npv_idx]
-                ax.text(0.95, 0.05, f"{Npv}PV, {operator_names[operator]}", ha="right", va="bottom", transform=ax.transAxes)
+                ax.text(
+                    0.95,
+                    0.05,
+                    f"{Npv}PV, {operator_names[operator]}",
+                    ha="right",
+                    va="bottom",
+                    transform=ax.transAxes,
+                )
 
     axes[-1][0].legend(loc="best")
 

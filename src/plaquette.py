@@ -4,6 +4,7 @@ from collections import defaultdict
 
 from pyerrors import Obs
 
+
 def read_plaquette_from_flows(filename):
     indices = defaultdict(list)
     plaquettes = defaultdict(list)
@@ -21,6 +22,8 @@ def read_plaquette_from_flows(filename):
             indices[run_name].append(cfg_index)
             plaquettes[run_name].append(plaquette)
 
-    result = Obs(list(plaquettes.values()), list(plaquettes), idl=list(indices.values()))
+    result = Obs(
+        list(plaquettes.values()), list(plaquettes), idl=list(indices.values())
+    )
     result.gamma_method()
     return result
