@@ -31,7 +31,7 @@ def weighted_mean(results):
 def add_band(ax, result):
     ax.axhline(result.value)
     ax.axhline(result.value + result.dvalue, dashes=(2, 2))
-    ax.axhline(result.value + result.dvalue, dashes=(2, 2))
+    ax.axhline(result.value - result.dvalue, dashes=(2, 2))
 
 
 def plot_results(correlator, results, output_filename=None):
