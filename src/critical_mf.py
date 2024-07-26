@@ -47,9 +47,18 @@ def inverse_fit_form(params, mPCAC):
     return m0 + (mPCAC / B) ** (1 / C)
 
 
-def fit(data):
-    x_data = [datum["description"]["valence_masses"][0] for datum in data]
-    y_data = [datum["obsdata"][0] for datum in data]
+def get_smallest(target_data, key_data, skip):
+    if not len(target_data) == len(key_data):
+        raise ValueError("Target and key data are not the same length.")
+
+    indices = sorted(range(len(key_data)), key=lambda k: key_data[k])
+    return [target_data[index] for index in indices[skip:]]
+
+
+def fit(data, skip=0):
+    full_x_data = [datum["description"]["valence_masses"][0] for datum in data]
+    x_data = get_smallest(full_x_data, full_x_data, skip)
+    y_data = get_smallest([datum["obsdata"][0] for datum in data], full_x_data, skip)
     for datum in y_data:
         datum.gamma_method()
     return pe.fits.least_squares(
@@ -78,11 +87,12 @@ def write_result(fit_result, args, metadata):
     )
 
 
-def plot_result(data, fit_result, output_filename):
+def plot_result(data, fit_results, output_filename):
     plt.style.use("styles/paperdraft.mplstyle")
     x_data = [datum["description"]["valence_masses"][0] for datum in data]
     y_data = [datum["obsdata"][0] for datum in data]
-    pe.fits.residual_plot(x_data, y_data, fit_form, fit_result)
+    main_fit_result = fit_results[0]
+    pe.fits.residual_plot(x_data, y_data, fit_form, main_fit_result)
 
     fig = plt.gcf()
     ax1, ax2 = fig.axes
@@ -90,19 +100,24 @@ def plot_result(data, fit_result, output_filename):
     _, xmax = ax1.get_xlim()
     _, ymax = ax1.get_ylim()
 
-    xmin = fit_result.fit_parameters[0].value - fit_result.fit_parameters[0].dvalue
+    xmin = main_fit_result.fit_parameters[0].value - main_fit_result.fit_parameters[0].dvalue
 
     for ax in ax1, ax2:
         ax.set_xlim(xmin, xmax)
     ax1.set_ylim(0, ymax)
 
     x = np.linspace(xmin, xmax, 1000)
-    ax1.plot(
-        x,
-        fit_form([param.value for param in fit_result.fit_parameters], x),
-        color="darkorange",
-    )
+    for skip, fit_result in fit_results.items():
+        label = f"Fit (omit {skip} lightest)" if skip > 0 else None
+        colour = {0: "darkorange", 1: "darkgreen"}[skip]
+        ax1.plot(
+            x,
+            fit_form([param.value for param in fit_result.fit_parameters], x),
+            color=colour,
+            label=label,
+        )
 
+    ax1.legend()
     if output_filename:
         plt.savefig(output_filename)
     else:
@@ -119,7 +134,13 @@ def main():
     fit_result = fit(data)
     fit_result.fit_parameters[0].gamma_method()
     write_result(fit_result, args, metadata)
-    plot_result(data, fit_result, args.plot_filename)
+
+    fit_result_skipsmallest = fit(data, skip=1)
+    plot_result(
+        data,
+        {0: fit_result, 1: fit_result_skipsmallest},
+        args.plot_filename,
+    )
 
 
 if __name__ == "__main__":
