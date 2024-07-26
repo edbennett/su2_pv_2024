@@ -2,6 +2,7 @@ from glob import glob
 from itertools import product
 import logging
 
+import argparse
 from joblib import Memory
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -9,12 +10,24 @@ import numpy as np
 import polars as pl
 import pyerrors as pe
 
+from plots import save_or_show
+
 
 memory = Memory("cache")
 
 betas = [1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8]
 masses = [-2.9, -2.8, -2.7, -2.7, -2.5, -2.4, -2.3, -2.2, -2.1, -2.0, -1.9, -1.8, -1.7, -1.6, -1.5, -1.4, -1.3, -1.2, -1.1, -1.0, -0.95, -0.9, -0.85, -0.8, -0.75, -0.7, -0.65, -0.6, -0.55, -0.5, -0.45, -0.4, -0.35, -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 pv_specs = [(0, None), (5, 0.5), (5, 1.0), (10, 0.5), (10, 1.0), (15, 0.5), (15, 1.0)]
+
+
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--threepanel_plot_filename", default=None)
+    parser.add_argument("--combined_plot_filename", default=None)
+    parser.add_argument("--input_dirname", default=".")
+    parser.add_argument("--use_title", action="store_true")
+    parser.add_argument("--plot_styles", default="styles/paperdraft.mplstyle")
+    return parser.parse_args()
 
 
 @memory.cache
@@ -71,10 +84,10 @@ def read_single_file(filename, therm=100):
     }
 
 
-def get_plaquette(npv, mpv, beta, mass, subdir=""):
+def get_plaquette(npv, mpv, beta, mass, dirname="."):
     data = []
     mpv_slug = "" if npv == 0 else f"_mpv{mpv}"
-    for filename in glob(f"raw_data/{subdir}/out_hmc_{npv}pv_beta{beta}_m{mass}{mpv_slug}_*"):
+    for filename in glob(f"{dirname}/out_hmc_{npv}pv_beta{beta}_m{mass}{mpv_slug}_*"):
         datum = read_single_file(filename)
         if datum:
             data.append(datum)
@@ -85,14 +98,14 @@ def get_plaquette(npv, mpv, beta, mass, subdir=""):
     return data[0]["plaquette"]
 
 
-def get_plaquettes(subdir=""):
+def get_plaquettes(dirname="."):
     results = pl.DataFrame([
         {
             "npv": npv,
             "mpv": float(mpv if mpv is not None else np.nan),
             "beta": beta,
             "mass": mass,
-            "plaquette_value": (plaquette := get_plaquette(npv, mpv, beta, mass, subdir=subdir)) or np.nan,
+            "plaquette_value": (plaquette := get_plaquette(npv, mpv, beta, mass, dirname=dirname)) or np.nan,
             "plaquette_error": plaquette.dvalue if plaquette else np.nan,
         }
         for (npv, mpv), beta, mass in product(pv_specs, betas, masses)
@@ -117,15 +130,6 @@ def get_title(npv, mpv):
     if npv > 0:
         title = f"{title}, $m_{{\\mathrm{{PV}}}}={mpv:.1f}$"
     return title
-
-
-def plot_phasediagram():
-    subdir = "phasediagram"
-    title = r"HMC + $m=10,m+\delta m=m_{\mathrm{PV}}$"
-
-    plaquettes = get_plaquettes(subdir=subdir)
-    plot_phasediagram_threepanel(plaquettes, title=title)
-    plot_phasediagram_combined(plaquettes, title=title)
 
 
 def filter(plaquettes, npv, mpv, beta):
@@ -164,8 +168,8 @@ def plot_phasediagram_combined(plaquettes, title=None, file_suffix=""):
     ax.set_xlabel("$m_0$")
     ax.set_ylabel(r"$\langle P \rangle$")
     ax.legend(loc="upper left", bbox_to_anchor=(1.1, 1.0))
-    plt.savefig(f"plots/phasediagram_overlaid{'_' if file_suffix else ''}{file_suffix}.pdf")
-    plt.close(fig)
+
+    return fig
 
 
 def plot_phasediagram_threepanel(plaquettes, title=None, file_suffix=""):
@@ -203,14 +207,26 @@ def plot_phasediagram_threepanel(plaquettes, title=None, file_suffix=""):
         fig.suptitle(title)
     axes[0].set_ylabel(r"$\langle P \rangle$")
     axes[-1].legend(loc="upper left", title=r"$\beta$", ncol=2, bbox_to_anchor=(1.1, 1.0))
-    plt.savefig(f"plots/phasediagram{'_' if file_suffix else ''}{file_suffix}.pdf")
-    plt.close(fig)
+
+    return fig
 
 
-def set_plot_defaults():
-    plt.style.use("styles/paperdraft.mplstyle")
+def main():
+    args = get_args()
+    plt.style.use(args.plot_styles)
+
+    title = r"HMC + $m=10,m+\delta m=m_{\mathrm{PV}}$" if args.use_title else ""
+    plaquettes = get_plaquettes(dirname=args.input_dirname)
+
+    save_or_show(
+        plot_phasediagram_threepanel(plaquettes, title=title),
+        args.threepanel_plot_filename,
+    )
+    save_or_show(
+        plot_phasediagram_combined(plaquettes, title=title),
+        args.combined_plot_filename,
+    )
 
 
 if __name__ == "__main__":
-    set_plot_defaults()
-    plot_phasediagram()
+    main()

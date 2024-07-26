@@ -1,4 +1,8 @@
+import glob
 import pandas as pd
+
+plot_styles = "styles/poster.mplstyle"
+plot_filetype = "svg"
 
 critical_mass_ensembles = pd.read_csv("metadata/critical_mass_tuning.csv")
 
@@ -8,7 +12,21 @@ targets = critical_mass_ensembles.drop(columns=["measure_spectrum", "m", "nsteps
 
 rule all:
     input:
+        f"assets/plots/phasediagram.{plot_filetype}",
         "intermediary_data/critical_mass/target_mass.csv",
+
+
+rule phasediagram:
+    input:
+        datafiles=glob.glob("raw_data/phasediagram/out_hmc_*"),
+        script="src/phasediagram.py",
+        plot_styles=plot_styles,
+    output:
+        "assets/plots/phasediagram.{plot_filetype}"
+    conda:
+        "envs/environment.yml"
+    shell:
+        "python {input.script} --input_dirname raw_data/phasediagram --threepanel_plot_filename {output} --combined_plot_filename /dev/null --plot_styles {input.plot_styles}"
 
 
 mpcac_datafile = "intermediary_data/critical_mass/{Npv}pv/beta{beta}/m{m}/mpv{mpv}/mpcac_{Npv}pv_beta{beta}_m{m}_mpv{mpv}_{nsteps}steps.json.gz"

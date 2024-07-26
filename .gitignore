@@ -9,6 +9,7 @@ cache/
 tmp/
 
 .snakemake/
+assets/
 intermediary_data/
 metadata/
 raw_data/
