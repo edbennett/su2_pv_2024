@@ -1,4 +1,7 @@
 import glob
+import re
+
+import numpy as np
 import pandas as pd
 
 plot_styles = "styles/poster.mplstyle"
@@ -7,13 +10,41 @@ plot_filetype = "svg"
 critical_mass_ensembles = pd.read_csv("metadata/critical_mass_tuning.csv")
 
 # TODO adjust once full runs are done
-targets = critical_mass_ensembles.drop(columns=["measure_spectrum", "m", "nsteps"]).drop_duplicates()
+critical_mass_targets = critical_mass_ensembles.drop(columns=["measure_spectrum", "m", "nsteps"]).drop_duplicates()
 
+production_ensembles = pd.read_csv("metadata/production.csv")
+thermalisation_mdtu = 2000
+
+operators = ["plaq", "sym"]
+interpolate_fit_order = 3
+Npvs = [5, 10, 15]
+mpvs = [0.5]
+
+def single_ensemble_metadata(wildcards):
+    subset = production_ensembles[
+       (production_ensembles.Npv == int(wildcards.Npv))
+       & (production_ensembles.beta == float(wildcards.beta))
+       & (production_ensembles.mpv == float(wildcards.mpv))
+       & (production_ensembles.L == int(wildcards.L))
+    ]
+    if len(subset) != 1:
+        raise ValueError(f"Expected 1 ensemble for {wildcards=}; found {len(subset)}")
+
+    return subset.iloc[0]
 
 rule all:
     input:
         f"assets/plots/phasediagram.{plot_filetype}",
         "intermediary_data/critical_mass/target_mass.csv",
+        f"assets/plots/volume_extrapolation_sym.{plot_filetype}",
+        f"assets/plots/g2_plaquette_comparison_sym.{plot_filetype}",
+        f"assets/plots/beta_interpolation_finite_a_combined.{plot_filetype}",
+        f"assets/plots/beta_interpolation_finite_a_5pv_mpv0.5_sym.{plot_filetype}",
+        f"assets/plots/beta_interpolation_finite_a_10pv_mpv0.5_sym.{plot_filetype}",
+        f"assets/plots/beta_interpolation_finite_a_15pv_mpv0.5_sym.{plot_filetype}",
+        f"assets/plots/beta_interpolation_finite_a_5pv_mpv0.5_plaq.{plot_filetype}",
+        f"assets/plots/beta_interpolation_finite_a_10pv_mpv0.5_plaq.{plot_filetype}",
+        f"assets/plots/beta_interpolation_finite_a_15pv_mpv0.5_plaq.{plot_filetype}",
 
 
 rule phasediagram:
@@ -36,7 +67,7 @@ rule fit_mpcac:
         script="src/mpcac.py",
     output:
         datafile=mpcac_datafile,
-        plotfile="intermediary_data/critical_mass/{Npv}pv/beta{beta}/m{m}/mpv{mpv}/effmass_{Npv}pv_beta{beta}_m{m}_mpv{mpv}_{nsteps}steps.pdf",
+        plotfile=f"intermediary_data/critical_mass/{{Npv}}pv/beta{{beta}}/m{{m}}/mpv{{mpv}}/effmass_{{Npv}}pv_beta{{beta}}_m{{m}}_mpv{{mpv}}_{{nsteps}}steps.{plot_filetype}",
     conda:
         "envs/environment.yml"
     shell:
@@ -60,7 +91,7 @@ rule critical_mass:
         script="src/critical_mf.py",
     output:
         datafile=critical_mass_datafile,
-        plotfile="intermediary_data/critical_mass/{Npv}pv/beta{beta}/mpv{mpv}/mf_extrapolation.pdf",
+        plotfile=f"intermediary_data/critical_mass/{{Npv}}pv/beta{{beta}}/mpv{{mpv}}/mf_extrapolation.{plot_filetype}",
     conda:
         "envs/environment.yml"
     shell:
@@ -68,7 +99,7 @@ rule critical_mass:
 
 
 critical_mass_files = [
-    critical_mass_datafile.format(**target) for target in targets.to_dict("records")
+    critical_mass_datafile.format(**target) for target in critical_mass_targets.to_dict("records")
 ]
 
 
@@ -82,3 +113,159 @@ rule collate_critical_masses:
         "envs/environment.yml"
     shell:
         "python {input.script} {input.datafiles} --output_file {output.csv}"
+
+
+def parse_flow_filename(filename):
+    index, jobid = re.match(".*/out_wflow_n([0-9]+)_([0-9]+)_0", filename).groups()
+    return int(index), int(jobid)
+
+
+def single_flows(wildcards):
+    metadata = single_ensemble_metadata(wildcards)
+    return sorted(
+        [
+            filename
+            for filename in glob.glob(f"raw_data/wilson_flow/{int(metadata.Npv)}pv/beta{metadata.beta}/m{metadata.m}/mpv{metadata.mpv}/L{int(wildcards.L)}/out_wflow_*")
+            if parse_flow_filename(filename)[0] * metadata.trajectory_length > thermalisation_mdtu
+        ],
+        key=lambda filename: parse_flow_filename(filename)[0],
+    )
+
+
+rule collate_flows:
+    input:
+        datafiles=single_flows,
+    output:
+        datafile="intermediary_data/wilson_flow/{Npv}pv/beta{beta}/mpv{mpv}/out_wflow_{Npv}pv_beta{beta}_mpv{mpv}_L{L}",
+    shell:
+        "touch {output.datafile} && if [[ '{input.datafiles}' != '' ]]; then cat {input.datafiles} > {output.datafile}; fi"
+
+
+def volume_extrapolation_ensembles(wildcards):
+    subset = production_ensembles[
+       (production_ensembles.Npv == int(wildcards.Npv))
+       & (production_ensembles.beta == float(wildcards.beta))
+       & (production_ensembles.mpv == float(wildcards.mpv))
+    ]
+    return [
+        f"intermediary_data/wilson_flow/{wildcards.Npv}pv/beta{wildcards.beta}/mpv{wildcards.mpv}/out_wflow_{wildcards.Npv}pv_beta{wildcards.beta}_mpv{wildcards.mpv}_L{ensemble['L']}"
+        for ensemble in subset.to_dict("records")
+        if ensemble["use"]
+    ]
+
+
+rule extrapolate_infinite_volume:
+    input:
+        data=volume_extrapolation_ensembles,
+        script="src/extrapolate_infinite_volume.py",
+    output:
+        "intermediary_data/beta_function/infinite_volume/{Npv}pv/mpv{mpv}/beta{beta}/t{time}_{operator}.json.gz",
+    conda:
+        "envs/environment.yml"
+    shell:
+        "python {input.script} {input.data} --output_filename {output} --operator {wildcards.operator} --time {wildcards.time} --Npv {wildcards.Npv} --mpv {wildcards.mpv} --beta {wildcards.beta}"
+
+
+def volume_extrapolation_plot_inputs(wildcards):
+    params = (5, 0.5, 2.35), (5, 0.5, 2.5), (10, 0.5, 2.4), (15, 0.5, 2.7)
+    times = [2.5, 3.5, 4.5, 6.0]
+    return [
+        f"intermediary_data/beta_function/infinite_volume/{Npv}pv/mpv{mpv}/beta{beta}/t{time}_{{operator}}.json.gz"
+        for Npv, mpv, beta in params
+        for time in times
+    ]
+
+
+rule plot_volume_extrapolation:
+    input:
+        data=volume_extrapolation_plot_inputs,
+        script="src/plot_infinite_volume_extrapolation.py",
+        plot_styles=plot_styles,
+    output:
+        "assets/plots/volume_extrapolation_{operator}.{plot_filetype}",
+    conda:
+        "envs/environment.yml"
+    shell:
+        "python {input.script} {input.data} --plot_filename {output} --plot_styles {input.plot_styles}"
+
+
+def g2_comparison_inputs(wildcards):
+    return [
+        f"intermediary_data/beta_function/infinite_volume/{Npv}pv/mpv{mpv}/beta{beta}/t6.0_{{operator}}.json.gz"
+        for Npv, mpv, beta in set(production_ensembles[["Npv", "mpv", "beta"]].itertuples(index=False))
+    ]
+
+
+rule g2_comparison:
+    input:
+        data=g2_comparison_inputs,
+        script="src/plot_g2_against_beta0.py",
+        plot_styles=plot_styles,
+    output:
+        "assets/plots/g2_plaquette_comparison_{operator}.{plot_filetype}",
+    conda:
+        "envs/environment.yml"
+    shell:
+        "python {input.script} {input.data} --plot_filename {output} --plot_styles {input.plot_styles}"
+
+
+def finite_a_betas(wildcards):
+    subset = production_ensembles[
+       (production_ensembles.Npv == int(wildcards.Npv))
+       & (production_ensembles.mpv == float(wildcards.mpv))
+    ]
+    return [
+        f"intermediary_data/beta_function/infinite_volume/{{Npv}}pv/mpv{{mpv}}/beta{beta}/t{{time}}_{{operator}}.json.gz"
+        for beta in set(subset.beta)
+    ]
+
+
+rule interpolate_finite_a:
+    input:
+        data=finite_a_betas,
+        script="src/fit_beta_against_g2.py",
+    output:
+        "intermediary_data/beta_interpolation/{Npv}pv/mpv{mpv}/t{time}_{operator}.json.gz",
+    params:
+        fit_order=interpolate_fit_order,
+    conda:
+        "envs/environment.yml"
+    shell:
+        "python {input.script} {input.data} --order {params.fit_order} --output_filename {output}"
+
+
+finite_a_plot_times = [2.5, 3.5, 4.5, 6.0]
+
+rule plot_finite_a_interpolation:
+    input:
+        data=expand(
+            "intermediary_data/beta_interpolation/{{Npv}}pv/mpv{{mpv}}/t{time}_{{operator}}.json.gz",
+            time=finite_a_plot_times,
+        ),
+        script="src/plot_beta_against_g2.py",
+        plot_styles=plot_styles,
+    output:
+        "assets/plots/beta_interpolation_finite_a_{Npv}pv_mpv{mpv}_{operator}.{plot_filetype}",
+    conda:
+        "envs/environment.yml"
+    shell:
+        "python {input.script} {input.data} --plot_styles {input.plot_styles} --plot_filename {output}"
+
+
+rule plot_finite_a_interpolation_combined:
+    input:
+        data=expand(
+            "intermediary_data/beta_interpolation/{Npv}pv/mpv{mpv}/t{time}_{operator}.json.gz",
+            time=finite_a_plot_times,
+            Npv=Npvs,
+            operator=operators,
+            mpv=mpvs,
+        ),
+        script="src/plot_beta_against_g2.py",
+        plot_styles=plot_styles,
+    output:
+        "assets/plots/beta_interpolation_finite_a_combined.{plot_filetype}",
+    conda:
+        "envs/environment.yml"
+    shell:
+        "python {input.script} {input.data} --plot_styles {input.plot_styles} --plot_filename {output}"
