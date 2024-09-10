@@ -10,7 +10,6 @@ import pyerrors as pe
 from fit_beta_against_g2 import interpolating_form
 from names import operator_names
 from plots import PlotPropRegistry, errorbar_pyerrors, save_or_show
-from perturbation_theory import add_perturbative_lines
 from read import read_all_fit_results
 
 
@@ -89,7 +88,6 @@ def plot(fit_results):
 
     _, xmax = axes[0][0].get_xlim()
     for ax in axes.ravel():
-        add_perturbative_lines(ax, 0, xmax, rep="adj", Nf=2, Nc=2)
         ax.axhline(0, color="black")
 
         ax.set_xlim(0, xmax)
