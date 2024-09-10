@@ -4,8 +4,8 @@ import re
 import numpy as np
 import pandas as pd
 
-plot_styles = "styles/poster.mplstyle"
-plot_filetype = "svg"
+plot_styles = "styles/paperdraft.mplstyle"
+plot_filetype = "pdf"
 
 critical_mass_ensembles = pd.read_csv("metadata/critical_mass_tuning.csv")
 
