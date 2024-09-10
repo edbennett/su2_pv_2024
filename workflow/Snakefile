@@ -188,6 +188,22 @@ def volume_extrapolation_plot_inputs(wildcards):
 
 rule plot_volume_extrapolation:
     input:
+        data=expand(
+            "intermediary_data/beta_function/infinite_volume/{{Npv}}pv/mpv{{mpv}}/beta{{beta}}/t{time}_{{operator}}.json.gz",
+            time=[2.5, 3.5, 4.5, 6.0],
+        ),
+        script="src/plot_infinite_volume_extrapolation.py",
+        plot_styles=plot_styles,
+    output:
+        "intermediary_data/beta_function/infinite_volume/{Npv}pv/mpv{mpv}/beta{beta}_{operator}.{plot_filetype}",
+    conda:
+        "envs/environment.yml"
+    shell:
+        "python {input.script} {input.data} --plot_filename {output} --plot_styles {input.plot_styles}"
+
+
+rule plot_volume_extrapolation_combined:
+    input:
         data=volume_extrapolation_plot_inputs,
         script="src/plot_infinite_volume_extrapolation.py",
         plot_styles=plot_styles,
