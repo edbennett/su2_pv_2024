@@ -90,6 +90,7 @@ def plot(fit_results):
     _, xmax = axes[0][0].get_xlim()
     for ax in axes.ravel():
         add_perturbative_lines(ax, 0, xmax, rep="adj", Nf=2, Nc=2)
+        ax.axhline(0, color="black")
 
         ax.set_xlim(0, xmax)
         ax.set_ylim(-5, 0.6)
