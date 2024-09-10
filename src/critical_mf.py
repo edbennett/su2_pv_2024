@@ -100,7 +100,10 @@ def plot_result(data, fit_results, output_filename):
     _, xmax = ax1.get_xlim()
     _, ymax = ax1.get_ylim()
 
-    xmin = main_fit_result.fit_parameters[0].value - main_fit_result.fit_parameters[0].dvalue
+    xmin = (
+        main_fit_result.fit_parameters[0].value
+        - main_fit_result.fit_parameters[0].dvalue
+    )
 
     for ax in ax1, ax2:
         ax.set_xlim(xmin, xmax)
