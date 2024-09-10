@@ -50,7 +50,7 @@ rule all:
 
 rule phasediagram:
     input:
-        datafiles=glob.glob("raw_data/phasediagram/out_hmc_*"),
+        datafiles=glob.glob("raw_data/phasediagram/*/out_hmc_*"),
         script="src/phasediagram.py",
         plot_styles=plot_styles,
     output:

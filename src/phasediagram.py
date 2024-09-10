@@ -137,7 +137,9 @@ def read_single_file(filename, therm=100):
 def get_plaquette(npv, mpv, beta, mass, dirname="."):
     data = []
     mpv_slug = "" if npv == 0 else f"_mpv{mpv}"
-    for filename in glob(f"{dirname}/out_hmc_{npv}pv_beta{beta}_m{mass}{mpv_slug}_*"):
+    for filename in glob(
+        f"{dirname}/{npv}pv/out_hmc_{npv}pv_beta{beta}_m{mass}{mpv_slug}_*"
+    ):
         datum = read_single_file(filename)
         if datum:
             data.append(datum)
