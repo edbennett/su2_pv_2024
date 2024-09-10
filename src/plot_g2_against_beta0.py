@@ -21,7 +21,7 @@ def get_args():
 
 def plot(fit_results):
     fig, axes = plt.subplots(
-        nrows=2, layout="constrained", figsize=(3.5, 5), sharex=True
+        ncols=2, layout="constrained", figsize=(6.5, 2.5), sharex=True
     )
     grouped_results = group_params(fit_results, ["Npv", "mpv"])
     colours = PlotPropRegistry.colours()

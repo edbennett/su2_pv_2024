@@ -73,7 +73,7 @@ def plot_g2_vs_L(fit_results, filename=None):
         ncols=2,
         sharex=True,
         layout="constrained",
-        figsize=(7, 1 + 2 * num_rows),
+        figsize=(7, 1 + 1 * num_rows),
         squeeze=False,
     )
     for ((Npv, mpv, beta), param_results), ax_row in zip(grouped_results.items(), axes):
