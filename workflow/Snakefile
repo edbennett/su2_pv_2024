@@ -36,6 +36,7 @@ rule all:
     input:
         f"assets/plots/phasediagram.{plot_filetype}",
         "intermediary_data/critical_mass/target_mass.csv",
+        f"assets/plots/mass_extrapolation_5pv_mpv0.5_beta2.35.{plot_filetype}",
         f"assets/plots/volume_extrapolation_sym.{plot_filetype}",
         f"assets/plots/g2_plaquette_comparison_sym.{plot_filetype}",
         f"assets/plots/beta_interpolation_finite_a_combined.{plot_filetype}",
@@ -96,6 +97,15 @@ rule critical_mass:
         "envs/environment.yml"
     shell:
         "python {input.script} {input.datafiles} --output_filename {output.datafile} --plot_filename {output.plotfile}"
+
+
+rule get_critical_mass_plot:
+    input:
+        "intermediary_data/critical_mass/{Npv}pv/beta{beta}/mpv{mpv}/mf_extrapolation.{plot_filetype}",
+    output:
+        "assets/plots/mass_extrapolation_{Npv}pv_mpv{mpv}_beta{beta}.{plot_filetype}",
+    shell:
+        "cp {input} {output}"
 
 
 critical_mass_files = [
