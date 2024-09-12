@@ -28,8 +28,13 @@ Portions of it are closely based on the workflow
    cd su2_pv_2024
    ```
 
-3. Download and extract
-   either the `raw_data_nf1.zip` or the `raw_data_nf2.zip` file from the [data release][datarelease].
+3. Download
+   either the `raw_data_nf1.zip` or the `raw_data_nf2.zip` file from the [data release][datarelease],
+   and extract it into the `raw_data` directory.
+
+4. Download
+   either the `metadata_nf1.zip` or the `metadata_nf2.zip` file from the [data release][datarelease],
+   and extract it into the `metadata` directory.
 
 ## Running the workflow
 
