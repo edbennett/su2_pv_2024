@@ -8,9 +8,14 @@ plot_styles = "styles/paperdraft.mplstyle"
 plot_filetype = "pdf"
 
 critical_mass_ensembles = pd.read_csv("metadata/critical_mass_tuning.csv")
-
-# TODO adjust once full runs are done
 critical_mass_targets = critical_mass_ensembles.drop(columns=["measure_spectrum", "m", "nsteps"]).drop_duplicates()
+
+# Kludge to pick the right filename for both Nf=1 and Nf=2 cases.
+mass_extrapolation_filename_template = f"assets/plots/mass_extrapolation_{{Npv}}pv_mpv{{mpv}}_beta{{beta}}.{plot_filetype}"
+if {'Npv': 5, 'beta': 2.35, 'mpv': 0.5} in critical_mass_targets.to_dict(orient="records"):
+    mass_extrapolation_filename = mass_extrapolation_filename_template.format(Npv=5, beta=2.35, mpv=0.5)
+else:
+    mass_extrapolation_filename = mass_extrapolation_filename_template.format(Npv=15, beta=2.7, mpv=0.5)
 
 Npvs = [5, 10, 15]
 mpvs = [0.5]
@@ -54,7 +59,7 @@ rule all:
     input:
         f"assets/plots/phasediagram.{plot_filetype}",
         "intermediary_data/critical_mass/target_mass.csv",
-        f"assets/plots/mass_extrapolation_5pv_mpv0.5_beta2.35.{plot_filetype}",
+        mass_extrapolation_filename,
         production_targets,
 
 
