@@ -12,13 +12,30 @@ critical_mass_ensembles = pd.read_csv("metadata/critical_mass_tuning.csv")
 # TODO adjust once full runs are done
 critical_mass_targets = critical_mass_ensembles.drop(columns=["measure_spectrum", "m", "nsteps"]).drop_duplicates()
 
-production_ensembles = pd.read_csv("metadata/production.csv")
+Npvs = [5, 10, 15]
+mpvs = [0.5]
+
+try:
+    production_ensembles = pd.read_csv("metadata/production.csv")
+    Npvs = sorted(set(production_ensembles.Npv))
+    mpvs = sorted(set(production_ensembles.mpv))
+    production_targets = [
+        f"assets/plots/volume_extrapolation_sym.{plot_filetype}",
+        f"assets/plots/g2_plaquette_comparison_sym.{plot_filetype}",
+        f"assets/plots/beta_interpolation_finite_a_combined.{plot_filetype}",
+    ] + [
+        f"assets/plots/beta_interpolation_finite_a_{Npv}pv_{mpv}0.5_sym.{plot_filetype}"
+        for Npv in Npvs
+        for mpv in mpvs
+    ]
+except FileNotFoundError:
+    production_ensembles = pd.DataFrame()
+    production_targets = []
+
 thermalisation_mdtu = 2000
 
 operators = ["plaq", "sym"]
 interpolate_fit_order = 3
-Npvs = [5, 10, 15]
-mpvs = [0.5]
 
 def single_ensemble_metadata(wildcards):
     subset = production_ensembles[
@@ -32,20 +49,13 @@ def single_ensemble_metadata(wildcards):
 
     return subset.iloc[0]
 
+
 rule all:
     input:
         f"assets/plots/phasediagram.{plot_filetype}",
         "intermediary_data/critical_mass/target_mass.csv",
         f"assets/plots/mass_extrapolation_5pv_mpv0.5_beta2.35.{plot_filetype}",
-        f"assets/plots/volume_extrapolation_sym.{plot_filetype}",
-        f"assets/plots/g2_plaquette_comparison_sym.{plot_filetype}",
-        f"assets/plots/beta_interpolation_finite_a_combined.{plot_filetype}",
-        f"assets/plots/beta_interpolation_finite_a_5pv_mpv0.5_sym.{plot_filetype}",
-        f"assets/plots/beta_interpolation_finite_a_10pv_mpv0.5_sym.{plot_filetype}",
-        f"assets/plots/beta_interpolation_finite_a_15pv_mpv0.5_sym.{plot_filetype}",
-        f"assets/plots/beta_interpolation_finite_a_5pv_mpv0.5_plaq.{plot_filetype}",
-        f"assets/plots/beta_interpolation_finite_a_10pv_mpv0.5_plaq.{plot_filetype}",
-        f"assets/plots/beta_interpolation_finite_a_15pv_mpv0.5_plaq.{plot_filetype}",
+        production_targets,
 
 
 rule phasediagram:
