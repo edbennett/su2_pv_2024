@@ -29,7 +29,7 @@ try:
         f"assets/plots/g2_plaquette_comparison_sym.{plot_filetype}",
         f"assets/plots/beta_interpolation_finite_a_combined.{plot_filetype}",
     ] + [
-        f"assets/plots/beta_interpolation_finite_a_{Npv}pv_{mpv}_sym.{plot_filetype}"
+        f"assets/plots/beta_interpolation_finite_a_{Npv}pv_mpv{mpv}_sym.{plot_filetype}"
         for Npv in Npvs
         for mpv in mpvs
     ]
