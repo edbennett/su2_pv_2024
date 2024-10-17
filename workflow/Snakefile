@@ -72,6 +72,8 @@ rule phasediagram:
         "assets/plots/phasediagram.{plot_filetype}"
     conda:
         "envs/environment.yml"
+    priority:
+        10
     shell:
         "python {input.script} --input_dirname raw_data/phasediagram --threepanel_plot_filename {output} --combined_plot_filename /dev/null --plot_styles {input.plot_styles}"
 
