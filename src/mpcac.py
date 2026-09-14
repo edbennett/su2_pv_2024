@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 
 import matplotlib.pyplot as plt
-from matplotlib import gridspec
-
-from meson_analysis.readers import read_correlators_hirep
-from meson_analysis.fits import fit_pcac, pcac_eff_mass
-
 import numpy as np
+from matplotlib import gridspec
+from meson_analysis.fits import fit_pcac, pcac_eff_mass
+from meson_analysis.readers import read_correlators_hirep
 
 
 def pcac_aic(correlator, range):
