@@ -1,17 +1,16 @@
+import argparse
+import logging
 from glob import glob
 from itertools import product
-import logging
 
-import argparse
-from joblib import Memory
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
 import pyerrors as pe
+from joblib import Memory
 
 from plots import save_or_show
-
 
 memory = Memory("cache")
 

@@ -3,13 +3,12 @@
 import gzip
 import re
 
-from flow_analysis.readers import readers
-
-from joblib import Memory
 import mpmath
 import numpy as np
 import pyerrors as pe
 import rapidjson as json
+from flow_analysis.readers import readers
+from joblib import Memory
 
 from utils import partial_corr_mult
 
