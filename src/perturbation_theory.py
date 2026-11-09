@@ -2,7 +2,6 @@
 
 import numpy as np
 
-
 # from https://arxiv.org/pdf/hep-ph/9701390
 quadratic_casimirs = {
     "adj": lambda Nc: Nc,
