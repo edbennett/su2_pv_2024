@@ -45,7 +45,7 @@ def zip_combinations(*lists, min_count=1):
     if max_count != max([len(list_) for list_ in lists]):
         logging.warning("List lengths are not equal.")
 
-    valid_indices = list(range(0, max_count))
+    valid_indices = list(range(max_count))
     for count in range(min_count, max_count + 1):
         for selected_indices in itertools.combinations(valid_indices, count):
             yield [[list_[index] for index in selected_indices] for list_ in lists]
